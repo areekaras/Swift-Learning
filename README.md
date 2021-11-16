@@ -1,2 +1,2 @@
 # Swift-Learning
-Practise Swift using documentation (docs.swift.org)
+Practise Swift using documentation (https://www.swift.org/documentation/)
