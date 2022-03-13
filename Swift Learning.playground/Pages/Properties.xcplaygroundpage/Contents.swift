@@ -1,27 +1,62 @@
 
+//MARK:- Properties
+    //Properties associate values with a particular class, structure, or enumeration.
+    //Stored properties store constant and variable values as part of an instance - provided only by classes and structures.
+    //computed properties calculate (rather than store) a value - provided by classes, structures, and enumerations
 
-/*
-//Lazy stored properties
+
+//MARK:- Stored Properties
+    //Stored properties can be either variable stored properties (introduced by the var keyword) or constant stored properties (introduced by the let keyword).
+
+    //Stored Properties of Constant Structure Instances
+        //If you create an instance of a structure and assign that instance to a constant, you can’t modify the instance’s properties, even if they were declared as variable properties:
+        //This behavior is due to structures being value types.
+        //The same isn’t true for classes, which are reference types.
+        //If you assign an instance of a reference type to a constant, you can still change that instance’s variable properties.
+
+
+    //Lazy stored properties
+        //A lazy stored property is a property whose initial value isn’t calculated until the first time it’s used.
+        //You indicate a lazy stored property by writing the lazy modifier before its declaration.
+        //You must always declare a lazy property as a variable (with the var keyword)
+        //Lazy properties are useful when
+            //the initial value for a property is dependent on outside factors whose values aren’t known until after an instance’s initialization is complete
+            //the initial value for a property requires complex or computationally expensive setup that shouldn’t be performed unless or until it’s needed
+
 class DataImporter {
-    var fileName = "data.txt"
+    /*
+    DataImporter is a class to import data from an external file.
+    The class is assumed to take a nontrivial amount of time to initialize.
+    */
+    var filename = "data.txt"
+    // the DataImporter class would provide data importing functionality here
 }
 
 class DataManager {
     lazy var importer = DataImporter()
     var data: [String] = []
+    // the DataManager class would provide data management functionality here
 }
 
-var manager = DataManager()
-manager.data.append("First data")
-manager.data.append("Second data")
+let manager = DataManager()
+manager.data.append("Some data")
+manager.data.append("Some more data")
+// the DataImporter instance for the importer property hasn't yet been created
 
-// the propery of Data manager is not created yet
 
-print(manager.importer.fileName) //Now the importer is created
-*/
+print(manager.importer.filename)
+// the DataImporter instance for the importer property has now been created
+// Prints "data.txt"
 
-/*
-//Computed properties
+    //If a property marked with the lazy modifier is accessed by multiple threads simultaneously and the property hasn’t yet been initialized, there’s no guarantee that the property will be initialized only once.
+
+
+
+
+
+//MARK:- Computed Properties
+    //provide a getter and an optional setter to retrieve and set other properties and values indirectly.
+    
 struct Point {
     var x = 0.0, y = 0.0
 }
@@ -49,19 +84,22 @@ struct Rect {
 
 var square = Rect(origin: Point(x: 0.0, y: 0.0), size: Size(width: 10.0, height: 10.0))
 let initialSquareCenter = square.center
-print("initialSquareCenter x: \(initialSquareCenter.x) y: \(initialSquareCenter.y)")
 
 square.center = Point(x: 15.0, y: 15)
-print("Current square origin x: \(square.origin.x) y: \(square.origin.y)")
+print("square.origin is now at (\(square.origin.x), \(square.origin.y))")
+// Prints "square.origin is now at (10.0, 10.0)"
 
-//Shorthand getter and setter
-struct anotherRect {
-    var origin: Point
-    var size: Size
-    
+
+    //Shorthand Setter Declaration
+        //If a computed property’s setter doesn’t define a name for the new value to be set, a default name of newValue is used
+struct AlternativeRect {
+    var origin = Point()
+    var size = Size()
     var center: Point {
-        get {  //short hand setter - no 'return' needed if single line
-            Point(x: origin.x + (size.width / 2), y: origin.y + (size.height / 2))
+        get {
+            let centerX = origin.x + (size.width / 2)
+            let centerY = origin.y + (size.height / 2)
+            return Point(x: centerX, y: centerY)
         }
         set {
             origin.x = newValue.x - (size.width / 2)
@@ -70,55 +108,92 @@ struct anotherRect {
     }
 }
 
-
-//read-only computed property
-struct Cuboid {
-    var width, height, depth: Double
-    
-    var volume: Double {
-        width * height * depth
+    //Shorthand Getter Declaration
+        //If the entire body of a getter is a single expression, the getter implicitly returns that expression.
+struct CompactRect {
+    var origin = Point()
+    var size = Size()
+    var center: Point {
+        get {
+            Point(x: origin.x + (size.width / 2),
+                  y: origin.y + (size.height / 2))
+        }
+        set {
+            origin.x = newValue.x - (size.width / 2)
+            origin.y = newValue.y - (size.height / 2)
+        }
     }
 }
 
-let fourByFiveByTwo = Cuboid(width: 4, height: 5, depth: 2)
-print("volume: \(fourByFiveByTwo.volume)")
+    //Read-Only Computed Properties
+        //A computed property with a getter but no setter is known as a read-only computed property.
+        //A read-only computed property always returns a value, and can be accessed through dot syntax, but can’t be set to a different value.
+struct Cuboid {
+    var width = 0.0, height = 0.0, depth = 0.0
+    var volume: Double {
+        return width * height * depth
+    }
+}
 
- */
+let fourByFiveByTwo = Cuboid(width: 4.0, height: 5.0, depth: 2.0)
+print("the volume of fourByFiveByTwo is \(fourByFiveByTwo.volume)")
+// Prints "the volume of fourByFiveByTwo is 40.0"
 
 
-/*
-//Property observers - willSet, didSet
+
+
+
+
+//MARK:- Property Observers - willSet, didSet
+    //Property observers observe and respond to changes in a property’s value.
+    //Property observers are called every time a property’s value is set, even if the new value is the same as the property’s current value.
+    //You can add property observers in the following places:
+        // Stored properties that you define
+        // Stored properties that you inherit
+        // Computed properties that you inherit
+
+    //You have the option to define either or both of these observers on a property:
+         // willSet is called just before the value is stored.
+         // didSet is called immediately after the new value is stored.
+
 class StepCounter {
-    var totalSteps = 0 {
-        willSet(newSteps) {
-            print("Adding \(newSteps)")
+    var totalSteps: Int = 0 {
+        willSet(newTotalSteps) {
+            print("About to set totalSteps to \(newTotalSteps)")
         }
         didSet {
-            print("Added \(totalSteps - oldValue) steps")
+            if totalSteps > oldValue  {
+                print("Added \(totalSteps - oldValue) steps")
+            }
         }
     }
-    
-    func changeStepsCount(_ totalSteps: inout Int) {
-        //the observers will call again if the property passed as inout parameter
-    }
 }
-
 let stepCounter = StepCounter()
-stepCounter.totalSteps = 100 //Adding 100 //Added 100 steps
+stepCounter.totalSteps = 200
+// About to set totalSteps to 200
+// Added 200 steps
+stepCounter.totalSteps = 360
+// About to set totalSteps to 360
+// Added 160 steps
+stepCounter.totalSteps = 896
+// About to set totalSteps to 896
+// Added 536 steps
 
-stepCounter.totalSteps = 300 //Adding 300 //Added 200 steps
-
-stepCounter.totalSteps = 896 //Adding 896 //Added 596 steps
-
-stepCounter.changeStepsCount(&stepCounter.totalSteps) //Adding 896 //Added 0 steps
-
- */
+    //If you pass a property that has observers to a function as an in-out parameter, the willSet and didSet observers are always called.
+    //This is because of the copy-in copy-out memory model for in-out parameters: The value is always written back to the property at the end of the function.
 
 
-//Property wrapper - wrappedValue, projected value
 
-/*
-//wrapped value
+
+
+//MARK:- Property Wrappers - wrappedValue, projected value
+    //A property wrapper adds a layer of separation between code that manages how a property is stored and the code that defines a property.
+    //For example, if you have properties that provide thread-safety checks or store their underlying data in a database, you have to write that code on every property.
+    //When you use a property wrapper, you write the management code once when you define the wrapper, and then reuse that management code by applying it to multiple properties.
+
+    //To define a property wrapper, you make a structure, enumeration, or class that defines a wrappedValue property.
+ 
+    //In the code below, the TwelveOrLess structure ensures that the value it wraps always contains a number less than or equal to 12. If you ask it to store a larger number, it stores 12 instead.
 @propertyWrapper
 struct TwelveOrLess {
     private var number = 0
@@ -128,6 +203,7 @@ struct TwelveOrLess {
         set { number = min(newValue, 12) }
     }
 }
+
 
 struct SmallRectangle {
     @TwelveOrLess var width: Int

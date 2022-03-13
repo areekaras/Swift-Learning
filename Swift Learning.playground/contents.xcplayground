@@ -2,6 +2,7 @@
 <playground version='6.0' target-platform='ios' buildActiveScheme='true'>
     <pages>
         <page name='The Basics'/>
+        <page name='Basic Operators'/>
         <page name='String and Characters'/>
         <page name='Control Flow'/>
         <page name='Functions'/>
